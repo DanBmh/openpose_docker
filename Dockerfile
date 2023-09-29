@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+FROM nvcr.io/nvidia/pytorch:20.02-py3
 
 RUN apt-get update
 RUN apt-get install -y software-properties-common
@@ -66,7 +66,12 @@ RUN cd cmake-3.14.1 && make -j12 && make install -j8
 RUN apt-get install -y liblmdb-dev libleveldb-dev libsnappy-dev
 RUN cd /home && git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose.git
 RUN cd /home/openpose && mkdir build
-RUN cd /home/openpose/build && cmake -DBUILD_PYTHON=ON ..
+
+COPY models/pose/body_25/pose_iter_584000.caffemodel /home/openpose/models/pose/body_25/pose_iter_584000.caffemodel
+COPY models/face/pose_iter_116000.caffemodel /home/openpose/models/face/pose_iter_116000.caffemodel
+COPY models/hand/pose_iter_102000.caffemodel /home/openpose/models/hand/pose_iter_102000.caffemodel
+
+RUN cd /home/openpose/build && cmake -DBUILD_PYTHON=ON .. -DUSE_CUDNN=OFF
 RUN cd /home/openpose/build && make -j12
 RUN cd /home/openpose/build && make install -j12
 
@@ -83,3 +88,5 @@ COPY scripts/exec_hm.sh /exec_hm.sh
 
 # make sure the right GPU is used (in case of multi-GPU setups)
 ENV CUDA_VISIBLE_DEVICES=0
+
+WORKDIR /
